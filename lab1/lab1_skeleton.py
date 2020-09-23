@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import math
 
 def computeMSE(prev, curr):
-    width, height = flow.shape[:2]
+    width, height = prev.shape[:2]
     size = width * height
 
     prev = prev.astype(np.int32)
@@ -56,7 +56,7 @@ def computeErrorImage(im1, im2):
     error_img = im1
     for x in range(width):
         for y in range(height):
-            error_img[x][y] = (im1[x][y] - im2[x][y]) / 2 + 127
+            error_img[x][y] = min(255,max(0,(im1[x][y] - im2[x][y]) / 2 + 128))
     return error_img
 
 
@@ -79,16 +79,22 @@ def computeGME(flow):
     c = np.array([w/2, h/2])
     src[:,:,0] += np.arange(w)
     src[:,:,1] += np.arange(h)[:,np.newaxis]
-    src -= c;
+    src -= c   
     srcPts = src.reshape((h*w, 2))
+    dst = src+flow
+    dstPts = dst.reshape((h*w, 2))
 
-    #TODO
+
+    m, mask = cv2.findHomography(srcPts, dstPts,0,cv2.RANSAC)
+
+    gme = cv2.perspectiveTransform(dst,m)
+
     # You should use
     # - cv2.findHomography
     #   see https://docs.opencv.org/3.4/d9/d0c/group__calib3d.html#ga4abc2ece9fab9398f2e560d53c8c9780
     # - cv2.perspectiveTransform
     #   see https://docs.opencv.org/3.4/d2/de8/group__core__array.html#gad327659ac03e5fd6894b90025e6900a7
-    gme = flow  #change this...
+    #gme = flow  #change this...
 
     return gme
 
