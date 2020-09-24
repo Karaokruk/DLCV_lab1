@@ -50,10 +50,7 @@ def computeEntropy(img):
 def computeErrorImage(im1, im2):
     width, height = im1.shape[:2]
 
-    im1 = im1.astype(np.int32)
-    im2 = im2.astype(np.int32)
-
-    error_img = im1
+    error_img = np.zeros_like(im1)
     for x in range(width):
         for y in range(height):
             error_img[x][y] = min(255,max(0,(im1[x][y] - im2[x][y]) / 2 + 128))
@@ -84,10 +81,9 @@ def computeGME(flow):
     dst = src+flow
     dstPts = dst.reshape((h*w, 2))
 
-
     m, mask = cv2.findHomography(srcPts, dstPts,0,cv2.RANSAC)
 
-    gme = cv2.perspectiveTransform(dst,m)
+    gme = cv2.perspectiveTransform(src,m) - src
 
     # You should use
     # - cv2.findHomography
@@ -99,8 +95,11 @@ def computeGME(flow):
     return gme
 
 def computeGMEError(flow, gme):
-    #TODO
     err = np.zeros(flow.shape[:2]) #change this
+    h, w = flow.shape[:2]
+    for y in range(h):
+        for x in range(w):
+            err[y][x] = np.linalg.norm(flow[y][x] - gme[y][x])    
 
     return err
 
